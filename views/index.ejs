@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Diary</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7f9;
+        margin: 0;
+        padding: 0;
+      }
+      header {
+        background: #2c3e50;
+        color: white;
+        padding: 15px 20px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+      }
+      .container {
+        max-width: 900px;
+        margin: 30px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      .entry {
+        border-bottom: 1px solid #ddd;
+        padding: 15px 0;
+      }
+      .entry:last-child {
+        border-bottom: none;
+      }
+      .entry h3 {
+        margin: 0;
+        color: #34495e;
+      }
+      .entry small {
+        color: #999;
+      }
+      .no-entries {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+      }
+      .logout-btn {
+        display: inline-block;
+        margin-top: 20px;
+        background: #e74c3c;
+        color: white;
+        padding: 10px 15px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      .logout-btn:hover {
+        background: #c0392b;
+      }
+      .add-btn {
+        display: inline-block;
+        margin-bottom: 20px;
+        background: #27ae60;
+        color: white;
+        padding: 10px 15px;
+        text-decoration: none;
+        border-radius: 5px;
+      }
+      .add-btn:hover {
+        background: #1e874b;
+      }
+      .action-btn {
+        display: inline-block;
+        margin: 5px 5px 0 0;
+        padding: 6px 10px;
+        font-size: 0.9em;
+        border-radius: 4px;
+        text-decoration: none;
+        color: white;
+      }
+      .view-btn { background: #2980b9; }
+      .view-btn:hover { background: #1f6391; }
+      .edit-btn { background: #f39c12; }
+      .edit-btn:hover { background: #c87f0a; }
+      .delete-btn { background: #e74c3c; }
+      .delete-btn:hover { background: #c0392b; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to Your Diary</h1>
+      <a href="/logout" class="logout-btn">Logout</a>
+    </header>
+
+    <div class="container">
+      <h2>Your Entries</h2>
+      <a href="/entries/new" class="add-btn">Add Entry</a>
+
+      <% if (entries.length > 0) { %>
+        <% entries.forEach(entry => { %>
+          <div class="entry">
+            <h3><%= entry.title %></h3>
+            <small><%= entry.createdAt.toDateString() %></small>
+            <div>
+              <a href="/entries/<%= entry._id %>" class="action-btn view-btn">View</a>
+              <a href="/entries/<%= entry._id %>/edit" class="action-btn edit-btn">Edit</a>
+              <form action="/entries/<%= entry._id %>/delete" method="POST" style="display:inline;">
+                <button type="submit" class="action-btn delete-btn" onclick="return confirm('Are you sure you want to delete this entry?')">Delete</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <p class="no-entries">No entries yet.</p>
+      <% } %>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Entry</title>
+</head>
+<body>
+    <h1>Edit Diary Entry</h1>
+
+    <form action="/entries/<%= entry._id %>/edit" method="POST">
+        <input type="text" name="title" value="<%= entry.title %>" required maxlength="100">
+        <br>
+        <textarea name="content" required maxlength="5000"><%= entry.content %></textarea>
+        <br>
+        <button type="submit">Update Entry</button>
+    </form>
+
+    <a href="/index">Cancel</a>
+</body>
+</html>

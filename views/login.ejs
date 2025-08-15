@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        form {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 300px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        button {
+            background: #4facfe;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #3a9bf4;
+        }
+        p {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        a {
+            color: #4facfe;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            background: #ffdddd;
+            color: #a94442;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <form action="/login" method="POST">
+        <h2>Login</h2>
+
+        <% if (typeof error !== 'undefined') { %>
+            <div class="error"><%= error %></div>
+        <% } %>
+
+        <input type="text" placeholder="Email" name="email" required value="<%= typeof email !== 'undefined' ? email : '' %>">
+        <input type="password" placeholder="Password" name="password" required>
+        <button type="submit">Login</button>
+        
+        <p>Don't have an account? <a href="/signup">Sign up</a></p>
+        <p>Forgot your password? <a href="/forgot-password">Reset it</a></p>
+    </form>
+</body>
+</html>

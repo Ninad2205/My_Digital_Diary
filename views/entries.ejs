@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Your Diary</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f4f7f9;
+        margin: 0;
+        padding: 20px;
+      }
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+      }
+      form {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      }
+      input, textarea {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        background: #27ae60;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #219150;
+      }
+      .back-btn {
+        background: #3498db;
+        margin-bottom: 10px;
+      }
+      .back-btn:hover {
+        background: #2d83c4;
+      }
+      ul {
+        max-width: 600px;
+        margin: 20px auto;
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        background: #fff;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      }
+      li strong {
+        color: #34495e;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Your Diary Entries</h1>
+
+    
+
+    <form action="/entries" method="POST">
+      <input
+        type="text"
+        name="title"
+        placeholder="Entry Title"
+        maxlength="100"
+        required
+      />
+      <textarea
+        name="content"
+        placeholder="Your thoughts..."
+        maxlength="5000"
+        required
+      ></textarea>
+      <button type="submit">Add Entry</button>
+      
+    </form>
+    <div style="max-width:600px; margin:auto;">
+      <button class="back-btn" onclick="history.back()">Back</button>
+    </div>
+
+
+  </body>
+</html>
