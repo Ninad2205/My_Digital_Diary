@@ -4,6 +4,7 @@ const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const path = require("path");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto"); // for shareable link IDs
 require("./config/mongooseconnection");
 
 const User = require("./models/user");
@@ -17,8 +18,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
-//session setup
+// session setup
 app.use(session({
     secret: "supersecretkey",
     resave: false,
@@ -33,7 +33,6 @@ app.use(session({
         secure: false 
     }
 }));
-
 
 // Middleware to check authentication
 function requireLogin(req, res, next) {
@@ -120,8 +119,7 @@ app.get("/index", requireLogin, async (req, res) => {
     }
 });
 
-
-// Add a new diary entry
+// Add a new diary entry form
 app.get("/entries/new", requireLogin, async (req, res) => {
     try {
         const entries = await DiaryEntry.find({ user: req.session.userId })
@@ -162,7 +160,7 @@ app.get("/entries/:id", requireLogin, async (req, res) => {
     }
 });
 
-//delete a diary entry
+// Delete a diary entry
 app.post("/entries/:id/delete", requireLogin, async (req, res) => {
     try {
         const entry = await DiaryEntry.findOneAndDelete({
@@ -181,8 +179,7 @@ app.post("/entries/:id/delete", requireLogin, async (req, res) => {
     }
 });
 
-
-//edit route
+// Edit route
 app.get("/entries/:id/edit", requireLogin, async (req, res) => {
     try {
         const entry = await DiaryEntry.findOne({
@@ -219,6 +216,54 @@ app.post("/entries/:id/edit", requireLogin, async (req, res) => {
         res.status(500).send("Server error");
     }
 });
+
+//Public/Private Toggle & Sharing
+
+// Make entry public
+app.post("/entries/:id/set-public", requireLogin, async (req, res) => {
+    try {
+        const entry = await DiaryEntry.findOne({ _id: req.params.id, user: req.session.userId });
+        if (!entry) return res.status(404).send("Not found");
+
+        entry.isPublic = true;
+        entry.shareId = crypto.randomBytes(8).toString("hex");
+        await entry.save();
+        res.redirect("/index");
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server error");
+    }
+});
+
+// Make entry private again
+app.post("/entries/:id/set-private", requireLogin, async (req, res) => {
+    try {
+        const entry = await DiaryEntry.findOne({ _id: req.params.id, user: req.session.userId });
+        if (!entry) return res.status(404).send("Not found");
+
+        entry.isPublic = false;
+        entry.shareId = undefined;
+        await entry.save();
+        res.redirect("/index");
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server error");
+    }
+});
+
+// Public view
+app.get("/share/:shareId", async (req, res) => {
+    try {
+        const entry = await DiaryEntry.findOne({ shareId: req.params.shareId, isPublic: true });
+        if (!entry) return res.status(404).send("Not found or private");
+        res.render("public-entry", { entry });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Server error");
+    }
+});
+
+/* ================================================ */
 
 // Logout
 app.get("/logout", (req, res) => {

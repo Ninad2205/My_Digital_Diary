@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= entry.title %> - Shared Diary Entry</title>
+</head>
+<body>
+    <h1><%= entry.title %></h1>
+    <p><%= entry.content %></p>
+    <small>Published on <%= entry.createdAt.toDateString() %></small>
+</body>
+</html>
