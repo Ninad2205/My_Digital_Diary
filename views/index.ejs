@@ -28,16 +28,7 @@
   </head>
   <body>
     <h1>Your Diary Entries</h1>
-
-    <form action="/entries" method="POST">
-      <input type="text" name="title" placeholder="Title" required />
-      <textarea
-        name="content"
-        placeholder="Your thoughts..."
-        required
-      ></textarea>
-      <button type="submit">Add Entry</button>
-    </form>
+    <a href="/entries/new %>" class="action-btn view-btn">Add New</a>
 
     <ul>
       <% if (entries.length === 0) { %>

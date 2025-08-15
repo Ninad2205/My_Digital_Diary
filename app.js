@@ -18,6 +18,34 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+//----------------------------------------------------------------
+//encryption functionality
+//----------------------------------------------------------------
+const ENCRYPTION_KEY = crypto.createHash('sha256').update(String('supersecretkey')).digest('base64').substr(0, 32); // 32 bytes key
+const IV_LENGTH = 16; // AES block size
+
+function encrypt(text) {
+    const iv = crypto.randomBytes(IV_LENGTH);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return iv.toString('hex') + ':' + encrypted;
+}
+
+function decrypt(text) {
+    const textParts = text.split(':');
+    const iv = Buffer.from(textParts[0], 'hex');
+    const encryptedText = textParts[1];
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+}
+//-----------------------------------------------------------------------------------------------
+//completed
+//-----------------------------------------------------------------------------------------------
+
 // session setup
 app.use(session({
     secret: "supersecretkey",
@@ -111,13 +139,19 @@ app.post("/signup", async (req, res) => {
 // Dashboard — show entries
 app.get("/index", requireLogin, async (req, res) => {
     try {
-        const entries = await DiaryEntry.find({ user: req.session.userId }).sort({ createdAt: -1 });
+        let entries = await DiaryEntry.find({ user: req.session.userId }).sort({ createdAt: -1 });
+        // Decrypt content for display
+        entries = entries.map(entry => ({
+            ...entry._doc,
+            content: decrypt(entry.content)
+        }));
         res.render("index", { entries });
     } catch (err) {
         console.error(err);
         res.status(500).send("Server error");
     }
 });
+
 
 // Add a new diary entry form
 app.get("/entries/new", requireLogin, async (req, res) => {
@@ -135,9 +169,10 @@ app.get("/entries/new", requireLogin, async (req, res) => {
 app.post("/entries", requireLogin, async (req, res) => {
     try {
         const { title, content } = req.body;
+        const encryptedContent = encrypt(content); // encrypt content
         const newEntry = new DiaryEntry({
             title,
-            content,
+            content: encryptedContent, // save encrypted content
             user: req.session.userId
         });
         await newEntry.save();
@@ -148,17 +183,21 @@ app.post("/entries", requireLogin, async (req, res) => {
     }
 });
 
-// View a specific diary entry
+
+// View a specific diary entry content
 app.get("/entries/:id", requireLogin, async (req, res) => {
     try {
         const entry = await DiaryEntry.findById(req.params.id);
         if (!entry) return res.status(404).send("Entry not found");
+
+        entry.content = decrypt(entry.content); // decrypt before sending to view
         res.render("viewEntry", { entry });
     } catch (err) {
         console.error(err);
         res.status(500).send("Server error");
     }
 });
+
 
 // Delete a diary entry
 app.post("/entries/:id/delete", requireLogin, async (req, res) => {
@@ -180,6 +219,7 @@ app.post("/entries/:id/delete", requireLogin, async (req, res) => {
 });
 
 // Edit route
+// Edit route
 app.get("/entries/:id/edit", requireLogin, async (req, res) => {
     try {
         const entry = await DiaryEntry.findOne({
@@ -191,24 +231,33 @@ app.get("/entries/:id/edit", requireLogin, async (req, res) => {
             return res.status(404).send("Entry not found or not authorized");
         }
 
-        res.render("edit", { entry });
+        // Decrypt content before showing in the edit form
+        let decryptedContent = entry.content;
+        try {
+            decryptedContent = decrypt(entry.content);
+        } catch (err) {
+            console.error("Failed to decrypt entry for editing:", entry._id, err);
+            decryptedContent = "[Could not decrypt]";
+        }
+
+        res.render("edit", { entry: { ...entry._doc, content: decryptedContent } });
     } catch (err) {
         console.error(err);
         res.status(500).send("Server error");
     }
 });
+
 app.post("/entries/:id/edit", requireLogin, async (req, res) => {
     try {
         const { title, content } = req.body;
+        const encryptedContent = encrypt(content); // encrypt updated content
         const entry = await DiaryEntry.findOneAndUpdate(
             { _id: req.params.id, user: req.session.userId },
-            { title, content },
+            { title, content: encryptedContent },
             { new: true }
         );
 
-        if (!entry) {
-            return res.status(404).send("Entry not found or not authorized");
-        }
+        if (!entry) return res.status(404).send("Entry not found or not authorized");
 
         res.redirect("/index");
     } catch (err) {
@@ -216,6 +265,7 @@ app.post("/entries/:id/edit", requireLogin, async (req, res) => {
         res.status(500).send("Server error");
     }
 });
+
 
 //Public/Private Toggle & Sharing
 
@@ -252,16 +302,28 @@ app.post("/entries/:id/set-private", requireLogin, async (req, res) => {
 });
 
 // Public view
+// Public view
 app.get("/share/:shareId", async (req, res) => {
     try {
         const entry = await DiaryEntry.findOne({ shareId: req.params.shareId, isPublic: true });
         if (!entry) return res.status(404).send("Not found or private");
-        res.render("public-entry", { entry });
+
+        // Decrypt content before showing
+        let decryptedContent = entry.content;
+        try {
+            decryptedContent = decrypt(entry.content);
+        } catch (err) {
+            console.error("Failed to decrypt public entry:", entry._id, err);
+            decryptedContent = "[Could not decrypt]";
+        }
+
+        res.render("public-entry", { entry: { ...entry._doc, content: decryptedContent } });
     } catch (err) {
         console.error(err);
         res.status(500).send("Server error");
     }
 });
+
 
 /* ================================================ */
 
