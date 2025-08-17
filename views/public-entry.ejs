@@ -1,11 +1,799 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= entry.title %> - Shared Diary Entry</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="<%= entry.title %>" />
+    <meta property="og:description" content="<%= entry.content.substring(0, 150) %>..." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="<%= typeof req !== 'undefined' ? req.originalUrl : '' %>" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="<%= entry.title %>" />
+    <meta name="twitter:description" content="<%= entry.content.substring(0, 150) %>..." />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #667eea;
+            --primary-dark: #5a6fd8;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --success-color: #4ade80;
+            --warning-color: #fbbf24;
+            --danger-color: #f87171;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-light: #9ca3af;
+            --background: #f8fafc;
+            --card-background: #ffffff;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --border-radius: 12px;
+            --border-radius-sm: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Public Header - Simplified */
+        .header-nav {
+            background: var(--gradient-bg);
+            color: white;
+            padding: 1rem 0 1.5rem 0;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><circle cx="10" cy="10" r="1.5"/><circle cx="30" cy="30" r="1.5"/><circle cx="30" cy="10" r="1"/><circle cx="10" cy="30" r="1"/></g></g></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            position: relative;
+        }
+
+        /* Public Navigation - No Auth Required */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+            opacity: 0.95;
+        }
+
+        .brand-logo:hover {
+            opacity: 1;
+            transform: scale(1.02);
+            transition: var(--transition);
+        }
+
+        .nav-breadcrumb {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+            opacity: 0.85;
+            font-weight: 300;
+        }
+
+        /* Public Notice */
+        .public-notice {
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem 1.2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: #059669;
+            font-size: 0.9rem;
+        }
+
+        .public-notice i {
+            font-size: 1.1rem;
+            opacity: 0.8;
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+            flex: 1;
+        }
+
+        /* Entry Display */
+        .entry-container {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .entry-header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 2.5rem 2rem 2rem 2rem;
+            text-align: center;
+        }
+
+        .entry-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
+
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meta-item i {
+            color: var(--primary-color);
+            opacity: 0.8;
+        }
+
+        .entry-content {
+            padding: 3rem 2rem;
+        }
+
+        .content-text {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 100%;
+        }
+
+        /* Public Actions */
+        .public-actions {
+            background: rgba(102, 126, 234, 0.02);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 2px solid transparent;
+        }
+
+        .btn-share {
+            background: var(--gradient-bg);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-share:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-print {
+            background: var(--card-background);
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+
+        .btn-print:hover {
+            background: var(--background);
+            border-color: var(--text-secondary);
+            color: var(--text-primary);
+        }
+
+        /* Watermark */
+        .watermark {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .watermark a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .watermark a:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--card-background);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 1rem 1.5rem 1rem;
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: auto;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            margin: 0 1rem;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-nav {
+                padding: 0.8rem 0 1.2rem 0;
+            }
+            
+            .nav {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.8rem;
+                margin-bottom: 0.8rem;
+            }
+            
+            .nav-left {
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            
+            .nav-actions {
+                justify-content: center;
+            }
+            
+            .main {
+                padding: 1rem;
+            }
+
+            .entry-header {
+                padding: 2rem 1.5rem 1.5rem 1.5rem;
+            }
+
+            .entry-title {
+                font-size: 2rem;
+            }
+
+            .entry-content {
+                padding: 2rem 1.5rem;
+            }
+
+            .content-text {
+                font-size: 1.1rem;
+            }
+
+            .public-actions {
+                padding: 1.5rem;
+                flex-direction: column;
+            }
+
+            .btn-action {
+                justify-content: center;
+            }
+
+            .entry-meta {
+                gap: 1rem;
+            }
+
+            .mobile-break {
+                display: inline;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-nav {
+                padding: 0.6rem 0 1rem 0;
+            }
+            
+            .header-content {
+                padding: 0 1rem;
+            }
+            
+            .brand-logo {
+                font-size: 1rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            
+            .nav-breadcrumb {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.6rem;
+            }
+            
+            .nav-left {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .main {
+                padding: 0.5rem;
+            }
+
+            .entry-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .entry-title {
+                font-size: 1.6rem;
+            }
+
+            .entry-content {
+                padding: 1.5rem 1rem;
+            }
+
+            .content-text {
+                font-size: 1rem;
+            }
+
+            .public-actions {
+                padding: 1rem;
+            }
+
+            .entry-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .mobile-break {
+                display: none;
+            }
+        }
+
+        /* Animation */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .header-nav, .public-actions, .footer, .public-notice {
+                display: none;
+            }
+            
+            .main {
+                padding: 0;
+                max-width: 100%;
+            }
+            
+            .entry-container {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+            
+            .entry-title {
+                font-size: 2rem;
+            }
+            
+            .content-text {
+                font-size: 12pt;
+                line-height: 1.6;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1><%= entry.title %></h1>
-    <p><%= entry.content %></p>
-    <small>Published on <%= entry.createdAt.toDateString() %></small>
+    <!-- Public Header -->
+    <header class="header-nav">
+        <div class="header-content">
+            <nav class="nav">
+                <div class="nav-left">
+                    <div class="brand-logo">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Shared Diary Entry</span>
+                    </div>
+                    <div class="nav-breadcrumb">
+                        <i class="fas fa-globe"></i>
+                        <span>Public View</span>
+                    </div>
+                </div>
+                <div class="nav-actions">
+                    <button onclick="shareEntry()" class="btn btn-primary">
+                        <i class="fas fa-share"></i>
+                        Share
+                    </button>
+                    <button onclick="window.print()" class="btn btn-secondary">
+                        <i class="fas fa-print"></i>
+                        Print
+                    </button>
+                </div>
+            </nav>
+            
+            <div class="title-section">
+                <p class="header-subtitle">A moment shared from someone's digital diary</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Public Notice -->
+        <div class="public-notice fade-in">
+            <i class="fas fa-globe"></i>
+            <span>This is a publicly shared diary entry. Anyone with the link can view this content.</span>
+        </div>
+
+        <!-- Entry Display -->
+        <article class="entry-container fade-in">
+            <!-- Entry Header -->
+            <header class="entry-header">
+                <h1 class="entry-title"><%= entry.title %></h1>
+                <div class="entry-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Published on <%= entry.createdAt.toDateString() %></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span><%= entry.createdAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) %></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-align-left"></i>
+                        <span><%= entry.content.split(' ').length %> words</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Entry Content -->
+            <div class="entry-content">
+                <div class="content-text"><%= entry.content %></div>
+            </div>
+
+            <!-- Public Actions -->
+            <footer class="public-actions">
+                <button onclick="shareEntry()" class="btn-action btn-share">
+                    <i class="fas fa-share-alt"></i>
+                    Share This Entry
+                </button>
+                <button onclick="window.print()" class="btn-action btn-print">
+                    <i class="fas fa-print"></i>
+                    Print
+                </button>
+                <button onclick="copyLink()" class="btn-action btn-print">
+                    <i class="fas fa-link"></i>
+                    Copy Link
+                </button>
+            </footer>
+
+            <!-- Watermark -->
+            <div class="watermark">
+                <p>Shared via <a href="/">My Digital Diary</a> • <a href="/privacy">Privacy Policy</a></p>
+            </div>
+        </article>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="/">Create Your Own Diary</a>
+                <a href="/about">About</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/terms">Terms</a>
+            </div>
+            <p>&copy; 2024 My Digital Diary.<br class="mobile-break">Connecting hearts through shared stories.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Share functionality
+        async function shareEntry() {
+            const title = '<%= entry.title %>';
+            const text = '<%= entry.content.substring(0, 100) %>...';
+            const url = window.location.href;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: title,
+                        text: text,
+                        url: url
+                    });
+                } catch (err) {
+                    console.log('Error sharing:', err);
+                    copyLink();
+                }
+            } else {
+                copyLink();
+            }
+        }
+
+        // Copy link to clipboard
+        async function copyLink() {
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                showNotification('Link copied to clipboard!', 'success');
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = window.location.href;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showNotification('Link copied to clipboard!', 'success');
+                } catch (err) {
+                    showNotification('Failed to copy link', 'error');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10b981' : '#ef4444'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                font-weight: 500;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+C to copy link
+            if (e.ctrlKey && e.key === 'c' && !window.getSelection().toString()) {
+                e.preventDefault();
+                copyLink();
+            }
+            
+            // Ctrl+P to print
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+            
+            // 'S' key to share
+            if (e.key === 's' || e.key === 'S') {
+                if (!e.ctrlKey && !e.altKey && !e.shiftKey) {
+                    e.preventDefault();
+                    shareEntry();
+                }
+            }
+        });
+
+        // Reading progress indicator
+        let progressBar;
+        function createProgressBar() {
+            progressBar = document.createElement('div');
+            progressBar.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 0%;
+                height: 3px;
+                background: var(--gradient-bg);
+                z-index: 1000;
+                transition: width 0.1s ease;
+            `;
+            document.body.appendChild(progressBar);
+        }
+
+        function updateProgress() {
+            const scrolled = window.pageYOffset;
+            const maxScroll = document.body.offsetHeight - window.innerHeight;
+            const progress = (scrolled / maxScroll) * 100;
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+        }
+
+        // Initialize progress bar
+        window.addEventListener('load', function() {
+            createProgressBar();
+            updateProgress();
+        });
+
+        window.addEventListener('scroll', updateProgress);
+
+        // Add smooth scrolling
+        document.documentElement.style.scrollBehavior = 'smooth';
+
+        // Analytics tracking (if needed)
+        function trackView() {
+            // Add your analytics code here
+            console.log('Public entry viewed:', '<%= entry.title %>');
+        }
+
+        // Track view on load
+        window.addEventListener('load', trackView);
+
+        // Estimate reading time
+        window.addEventListener('load', function() {
+            const content = '<%= entry.content %>';
+            const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+            const readingTime = Math.ceil(wordCount / 200); // Average reading speed
+            
+            // Could display this if desired
+            console.log(`Reading time: ${readingTime} minute(s)`);
+        });
+    </script>
 </body>
 </html>
